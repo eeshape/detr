@@ -10,6 +10,11 @@ import os
 import contextlib
 import copy
 import numpy as np
+# Compatibility shim for NumPy>=1.24 where aliases like np.float/np.int were removed
+if not hasattr(np, "float"):
+    np.float = float  # type: ignore[attr-defined]
+if not hasattr(np, "int"):
+    np.int = int  # type: ignore[attr-defined]
 import torch
 
 from pycocotools.cocoeval import COCOeval
