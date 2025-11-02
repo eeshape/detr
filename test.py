@@ -1,3 +1,6 @@
+# export CUDA_VISIBLE_DEVICES=1
+
+
 import time
 import torch
 

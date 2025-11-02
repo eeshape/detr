@@ -155,6 +155,12 @@ def build(image_set, args):
             "train": (root / "train2017", root / "annotations" / f'{args.skin}.json'),
             "val": (root / "val2017", root / "annotations" / f'{args.skin}.json'),
         }
+    # gender 인자가 제공되면 해당 annotation 파일 사용
+    elif args.gender:
+        PATHS = {
+            "train": (root / "train2017", root / "annotations" / f'gender_{args.gender}.json'),
+            "val": (root / "val2017", root / "annotations" / f'gender_{args.gender}.json'),
+        }
     else:
         PATHS = {
             "train": (root / "train2017", root / "annotations" / f'{mode}_train2017.json'),
