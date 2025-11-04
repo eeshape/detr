@@ -15,10 +15,29 @@ import datasets.transforms as T
 
 
 class CocoDetection(torchvision.datasets.CocoDetection):
-    def __init__(self, img_folder, ann_file, transforms, return_masks):
+    def __init__(self, img_folder, ann_file, transforms, return_masks, light_filter=None):
         super(CocoDetection, self).__init__(img_folder, ann_file)
         self._transforms = transforms
         self.prepare = ConvertCocoPolysToMask(return_masks)
+        self.light_filter = light_filter
+        
+        # lighting 필터가 지정된 경우, 해당 조건에 맞는 이미지만 필터링
+        if self.light_filter:
+            self._filter_by_lighting()
+    
+    def _filter_by_lighting(self):
+        """lighting 조건에 맞는 이미지만 남기도록 필터링"""
+        lighting_attr = f'lighting_{self.light_filter}'
+        
+        # 각 이미지에 대해 해당 lighting 조건을 만족하는 annotation이 있는지 확인
+        valid_image_ids = set()
+        for ann in self.coco.dataset['annotations']:
+            if 'attributes' in ann and ann['attributes'].get(lighting_attr, 0) == 1:
+                valid_image_ids.add(ann['image_id'])
+        
+        # 필터링된 이미지 ID만 남김
+        self.ids = [img_id for img_id in self.ids if img_id in valid_image_ids]
+        print(f"Filtered to {len(self.ids)} images with {lighting_attr} condition")
 
     def __getitem__(self, idx):
         img, target = super(CocoDetection, self).__getitem__(idx)
@@ -149,6 +168,11 @@ def build(image_set, args):
     assert root.exists(), f'provided COCO path {root} does not exist'
     mode = 'instances'
     
+    # lighting 필터 결정
+    light_filter = None
+    if args.light:
+        light_filter = 'well_lit' if args.light == 'well' else 'dimly_lit'
+    
     # skin 인자가 제공되면 해당 annotation 파일 사용
     if args.skin:
         PATHS = {
@@ -168,5 +192,6 @@ def build(image_set, args):
         }
 
     img_folder, ann_file = PATHS[image_set]
-    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set), return_masks=args.masks)
+    dataset = CocoDetection(img_folder, ann_file, transforms=make_coco_transforms(image_set), 
+                           return_masks=args.masks, light_filter=light_filter)
     return dataset

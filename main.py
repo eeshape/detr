@@ -87,6 +87,8 @@ def get_args_parser():
                         help='Skin annotation file name (e.g., skin1, skin2, ..., skin10)')
     parser.add_argument('--gender', type=str, default=None,
                         help='Gender annotation file name (e.g., men, women)')
+    parser.add_argument('--light', type=str, default=None, choices=['well', 'dimly'],
+                        help='Lighting condition (well for well_lit, dimly for dimly_lit)')
 
     parser.add_argument('--output_dir', default='',
                         help='path where to save, empty for no saving')
