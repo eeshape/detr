@@ -260,6 +260,56 @@ python -m torch.distributed.launch --nproc_per_node=8 --use_env main.py --masks 
 ```
 For instance segmentation only, simply remove the `dataset_file` and `coco_panoptic_path` arguments from the above command line.
 
+# Experiment Automation Scripts
+
+We provide Python scripts for automated batch evaluation with GPU parallel processing support. These scripts are designed for running systematic evaluations across different conditions (skin types, lighting, darkness values).
+
+## Quick Start
+
+```bash
+# Run all skin type evaluations (skin1-10) with 4 GPUs
+python run_skin_evaluations.py --num_gpus 4 --coco_path /path/to/COCO
+
+# Run lighting condition evaluations
+python run_lighting_evaluations.py --num_gpus 2 --coco_path /path/to/COCO
+
+# Run all experiments
+python run_all_experiments.py --run_all --num_gpus 4 --coco_path /path/to/COCO
+
+# Collect and analyze results
+python collect_results.py --results_dir ./results --export_csv
+```
+
+## Features
+
+- ✅ **GPU Parallel Processing**: Automatic multi-GPU support using `torch.distributed`
+- ✅ **Direct Python Execution**: No shell scripts required
+- ✅ **Automatic Result Collection**: JSON and CSV output formats
+- ✅ **Flexible Configuration**: Command-line arguments for fine control
+
+## Available Scripts
+
+- `run_skin_evaluations.py` - Evaluate all skin types (skin1-10)
+- `run_lighting_evaluations.py` - Evaluate lighting conditions (well/dimly)
+- `run_darkness_evaluations.py` - Evaluate darkness values (0.1, 0.5, 1.0)
+- `run_all_experiments.py` - Run all experiments in one command
+- `collect_results.py` - Collect and analyze evaluation results
+- `example_usage.py` - Display usage examples
+
+## Documentation
+
+For detailed usage and examples, see [EXPERIMENT_GUIDE.md](EXPERIMENT_GUIDE.md).
+
+To see usage examples:
+```bash
+python example_usage.py
+```
+
+To run tests:
+```bash
+python test_experiment_scripts.py
+```
+
 # License
 DETR is released under the Apache 2.0 license. Please see the [LICENSE](LICENSE) file for more information.
 
