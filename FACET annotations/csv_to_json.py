@@ -1,11 +1,26 @@
 import csv
 import json
 import ast
+import re
 from pathlib import Path
 
-# CSV 파일 경로
-csv_path = "/home/dohyeong/Desktop/COCO/annotations/annotations.csv"
-json_path = "/home/dohyeong/Desktop/COCO/annotations/instances_all.json"
+# 경로 설정
+base_dir = Path("/workspace/output_extracted/annotations")
+csv_path = base_dir / "annotations.csv"
+coco_boxes_path = base_dir / "coco_boxes.json"
+json_path = base_dir / "instances_all.json"
+
+# coco_boxes.json에서 실제 이미지 크기 정보 로드
+with open(coco_boxes_path, 'r', encoding='utf-8') as f:
+    coco_boxes = json.load(f)
+# filename -> {id, width, height} 매핑
+image_size_map = {}
+for img in coco_boxes["images"]:
+    image_size_map[img["file_name"]] = {
+        "id": img["id"],
+        "width": img["width"],
+        "height": img["height"],
+    }
 
 # COCO 형식 JSON 구조 초기화
 coco_data = {
@@ -22,26 +37,35 @@ coco_data = {
 
 # 이미지 ID 매핑 (filename -> image_id)
 image_dict = {}
-image_id_counter = 1
 annotation_id_counter = 1
 
 # CSV 파일 읽기
 with open(csv_path, 'r', encoding='utf-8') as csvfile:
     reader = csv.DictReader(csvfile)
-    
+
     for row in reader:
         filename = row['filename']
-        
+
         # 이미지 정보 추가 (중복 방지)
         if filename not in image_dict:
-            image_dict[filename] = image_id_counter
+            if filename in image_size_map:
+                img_info = image_size_map[filename]
+                img_id = img_info["id"]
+                w = img_info["width"]
+                h = img_info["height"]
+            else:
+                # coco_boxes에 없으면 filename에서 숫자 추출하여 ID 생성
+                nums = re.findall(r'\d+', filename)
+                img_id = int(nums[0]) if nums else len(image_dict) + 1
+                w, h = 0, 0
+                print(f"[warn] {filename} not found in coco_boxes.json, size unknown")
+            image_dict[filename] = img_id
             coco_data["images"].append({
-                "id": image_id_counter,
+                "id": img_id,
                 "file_name": filename,
-                "width": 2250,  # 기본값 (필요시 수정)
-                "height": 1500  # 기본값 (필요시 수정)
+                "width": w,
+                "height": h,
             })
-            image_id_counter += 1
         
         # bounding box 파싱
         bbox_str = row['bounding_box']
